@@ -33,7 +33,13 @@ const STEPS = {
   9: 'INTENSITY_NORMALIZATION',
 
   'LESION_SEG': 10,
-  10: 'LESION_SEG'
+  10: 'LESION_SEG',
+
+  'CO_REGISTRATION': 11,
+  11: 'CO_REGISTRATION',
+
+  'HYPERINTENSITY_SEG': 12,
+  12: 'HYPERINTENSITY_SEG'
 };
 
 const DEPENDENCY_GRAPH = {
@@ -45,7 +51,10 @@ const DEPENDENCY_GRAPH = {
 
   [STEPS.GRADIENT_ANALYSIS]: [STEPS.FLAIR_INPUT],
   [STEPS.INTENSITY_NORMALIZATION]: [STEPS.FLAIR_INPUT],
-  [STEPS.LESION_SEG]: [STEPS.GRADIENT_ANALYSIS, STEPS.INTENSITY_NORMALIZATION]
+  [STEPS.LESION_SEG]: [STEPS.GRADIENT_ANALYSIS, STEPS.INTENSITY_NORMALIZATION],
+
+  [STEPS.CO_REGISTRATION]: [STEPS.STRUCTURAL_SEG, STEPS.LESION_SEG],
+  [STEPS.HYPERINTENSITY_SEG]: [STEPS.CO_REGISTRATION]
 };
 
 const REVERSE_DEPENDENCY_GRAPH = {
@@ -53,11 +62,14 @@ const REVERSE_DEPENDENCY_GRAPH = {
   [STEPS.SKULL_STRIP]: [STEPS.VOXEL_MORPH, STEPS.STRUCTURAL_SEG],
   [STEPS.BIAS_CORRECTION]: [STEPS.STRUCTURAL_SEG],
   [STEPS.VOXEL_MORPH]: [STEPS.TENSOR_MORPH],
-  [STEPS.STRUCTURAL_SEG]: [STEPS.TENSOR_MORPH],
+  [STEPS.STRUCTURAL_SEG]: [STEPS.TENSOR_MORPH, STEPS.CO_REGISTRATION],
 
   [STEPS.FLAIR_INPUT]: [STEPS.GRADIENT_ANALYSIS, STEPS.INTENSITY_NORMALIZATION],
   [STEPS.GRADIENT_ANALYSIS]: [STEPS.LESION_SEG],
-  [STEPS.INTENSITY_NORMALIZATION]: [STEPS.LESION_SEG]
+  [STEPS.INTENSITY_NORMALIZATION]: [STEPS.LESION_SEG],
+
+  [STEPS.CO_REGISTRATION]: [STEPS.HYPERINTENSITY_SEG],
+  [STEPS.LESION_SEG]: [STEPS.CO_REGISTRATION]
 };
 
 
@@ -69,21 +81,21 @@ const App = () => {
   const [buttonsToShow, setButtonsToShow] = useState([]);
 
   const dependenciesSlected = (option) => {
-    // console.log(config);
-    // console.log(config.map(o => STEPS[0]));
-    // console.log(DEPENDENCY_GRAPH[option].every(dependency => config.includes(dependency)));
     return DEPENDENCY_GRAPH[option].every(dependency => config.includes(dependency));
   };
 
-  // const filterButtons = (option) => {
-  //   const filteredButtons = buttonsToShow.filter(btn => btn !== option);
-  //   const nextButtons = REVERSE_DEPENDENCY_GRAPH[option].filter(btn => dependenciesSlected(btn));
-  //   const newButtonsToShow = filteredButtons.concat(nextButtons.filter(btn => filteredButtons.includes(btn) === false ));
-  //   setButtonsToShow(newButtonsToShow);
-  // };
-
   const handleSelectedOption = (option) => {
-    const newButtonsToShow = REVERSE_DEPENDENCY_GRAPH[option].filter(btn => buttonsToShow.includes(btn) === false);
+    let newButtonsToShow;
+    if(option !== 2) newButtonsToShow = REVERSE_DEPENDENCY_GRAPH[option].filter(btn => buttonsToShow.includes(btn) === false);
+    else {
+      // Option 3
+      newButtonsToShow = REVERSE_DEPENDENCY_GRAPH[STEPS.T1_INPUT].filter(btn => buttonsToShow.includes(btn) === false);
+      newButtonsToShow = newButtonsToShow.concat(REVERSE_DEPENDENCY_GRAPH[STEPS.FLAIR_INPUT].filter(btn => buttonsToShow.includes(btn) === false).filter(btn => newButtonsToShow.includes(btn) === false));
+      setSelectedOption(option);
+      setConfig([STEPS.T1_INPUT, STEPS.FLAIR_INPUT]);
+      setButtonsToShow(newButtonsToShow);
+      return;
+    }
     setSelectedOption(option);
     setConfig([option]);
     setButtonsToShow(newButtonsToShow);
@@ -107,7 +119,6 @@ const App = () => {
   };
 
   const handleStepSelection = (option) => {
-    // filterButtons(option);
     const filteredButtons = buttonsToShow.filter(btn => btn !== option);
     const nextButtonsFromTheSelectedOne = REVERSE_DEPENDENCY_GRAPH[option] ? REVERSE_DEPENDENCY_GRAPH[option].filter(btn => buttonsToShow.includes(btn) === false) : [];
     const newButtonsToShow = filteredButtons.concat(nextButtonsFromTheSelectedOne);
@@ -132,8 +143,6 @@ const App = () => {
   };
 
 
-  // console.log(config);
-  // console.log(config.map(o => STEPS[o]));
   return (
     <>
       { renderInputOptions() }
