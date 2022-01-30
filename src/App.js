@@ -24,7 +24,16 @@ const STEPS = {
   6: 'STRUCTURAL_SEG',
 
   'TENSOR_MORPH': 7,
-  7: 'TENSOR_MORPH'
+  7: 'TENSOR_MORPH',
+
+  'GRADIENT_ANALYSIS': 8,
+  8: 'GRADIENT_ANALYSIS',
+
+  'INTENSITY_NORMALIZATION':9,
+  9: 'INTENSITY_NORMALIZATION',
+
+  'LESION_SEG': 10,
+  10: 'LESION_SEG'
 };
 
 const DEPENDENCY_GRAPH = {
@@ -32,7 +41,11 @@ const DEPENDENCY_GRAPH = {
   [STEPS.BIAS_CORRECTION]: [STEPS.T1_INPUT],
   [STEPS.VOXEL_MORPH]: [STEPS.SKULL_STRIP],
   [STEPS.STRUCTURAL_SEG]: [STEPS.SKULL_STRIP, STEPS.BIAS_CORRECTION],
-  [STEPS.TENSOR_MORPH]: [STEPS.VOXEL_MORPH, STEPS.STRUCTURAL_SEG]
+  [STEPS.TENSOR_MORPH]: [STEPS.VOXEL_MORPH, STEPS.STRUCTURAL_SEG],
+
+  [STEPS.GRADIENT_ANALYSIS]: [STEPS.FLAIR_INPUT],
+  [STEPS.INTENSITY_NORMALIZATION]: [STEPS.FLAIR_INPUT],
+  [STEPS.LESION_SEG]: [STEPS.GRADIENT_ANALYSIS, STEPS.INTENSITY_NORMALIZATION]
 };
 
 const REVERSE_DEPENDENCY_GRAPH = {
@@ -40,7 +53,11 @@ const REVERSE_DEPENDENCY_GRAPH = {
   [STEPS.SKULL_STRIP]: [STEPS.VOXEL_MORPH, STEPS.STRUCTURAL_SEG],
   [STEPS.BIAS_CORRECTION]: [STEPS.STRUCTURAL_SEG],
   [STEPS.VOXEL_MORPH]: [STEPS.TENSOR_MORPH],
-  [STEPS.STRUCTURAL_SEG]: [STEPS.TENSOR_MORPH]
+  [STEPS.STRUCTURAL_SEG]: [STEPS.TENSOR_MORPH],
+
+  [STEPS.FLAIR_INPUT]: [STEPS.GRADIENT_ANALYSIS, STEPS.INTENSITY_NORMALIZATION],
+  [STEPS.GRADIENT_ANALYSIS]: [STEPS.LESION_SEG],
+  [STEPS.INTENSITY_NORMALIZATION]: [STEPS.LESION_SEG]
 };
 
 
@@ -102,28 +119,35 @@ const App = () => {
   };
 
   const getButtons = () => {
-    if(!buttonsToShow.length) return null;
-    return buttonsToShow.map(btn => {
-      return <button disabled={ dependenciesSlected(btn) ? false : true } key={btn} onClick={() => handleStepSelection(btn)}>{STEPS[btn]}</button>;
-    });
+    if(!buttonsToShow.length) return ' None';
+    return (
+      <div>
+        {
+          buttonsToShow.map(btn => {
+          return <button disabled={ dependenciesSlected(btn) ? false : true } key={btn} onClick={() => handleStepSelection(btn)}>{STEPS[btn]}</button>;
+        })
+        }
+      </div>
+    );
   };
 
 
-  console.log(config);
-  console.log(config.map(o => STEPS[o]));
+  // console.log(config);
+  // console.log(config.map(o => STEPS[o]));
   return (
     <>
       { renderInputOptions() }
       <hr/>
       <div>
-        Selected { selectedOption === null ? 'None' : STEPS[selectedOption] }
+        Selected: { selectedOption === null ? 'None' : STEPS[selectedOption] }
       </div>
       <hr/>
+      Available Steps: 
       {
         getButtons()
       }
       <hr/>
-      Configuration so far: { config.length ? config.map(step => STEPS[step]).join(' > ') : 'None' }
+      Configuration: { config.length ? config.map(step => STEPS[step]).join(' > ') : 'None' }
     </>
     
   );
