@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import problemImage from './pic.png';
 
 
 const STEPS = {
@@ -157,6 +158,11 @@ const App = () => {
       }
       <hr/>
       Configuration: { config.length ? config.map(step => STEPS[step]).join(' > ') : 'None' }
+      <br/> <br/> <br/> <br/> <br/> <br/>
+      Possible paths:
+      <div>
+        <img src={problemImage} alt='Very meaningful text'/>
+      </div>
     </>
     
   );
