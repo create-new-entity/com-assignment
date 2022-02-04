@@ -8,12 +8,48 @@ import problemImage from './pic.png';
 const App = () => {
 
   const [selectedOption, setSelectedOption] = useState(null);
+  const [showRunOption, setShowRunOption] = useState(false);
   const [config, setConfig] = useState([]);
   const [buttonsToShow, setButtonsToShow] = useState([]);
 
   const handleSelectedOption = (option) => {
     setSelectedOption(option);
-    setButtonsToShow(NODES[option]);
+    setShowRunOption(true);
+  };
+
+  const getRunOrCustomButtons = () => {
+    if(!showRunOption) return null;
+
+    const runCustomBtnHandler = () => {
+      setButtonsToShow(NODES[selectedOption]);
+      setShowRunOption(false);
+    };
+
+    const runAllBtnHandler = async () => {
+      let allButtons = NODES[selectedOption];
+      let dependencies = [];
+
+      allButtons = allButtons.map(btn => {
+        return new Promise((resolve) => resolve(getDependencies(btn, [])))
+          .then((newDependencies) => {
+            console.log(newDependencies);
+            newDependencies = newDependencies.filter(btn => dependencies.includes(btn) === false);
+            dependencies = dependencies.concat(newDependencies);
+          });
+      });
+      
+
+      await Promise.all(allButtons);
+
+      setConfig(dependencies);
+      setShowRunOption(false);
+    };
+
+    return <>
+      <hr/>
+      <button onClick={runAllBtnHandler}>Run All Steps</button>
+      <button onClick={runCustomBtnHandler}>Customize Steps</button>
+    </>;
   };
 
   const clearEverything = () => {
@@ -65,6 +101,9 @@ const App = () => {
       <div>
         Selected: { selectedOption === null ? 'None' : STEPS[selectedOption] }
       </div>
+      {
+        getRunOrCustomButtons()
+      }
       <hr/>
       Available Steps: 
       {
