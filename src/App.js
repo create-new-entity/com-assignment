@@ -32,7 +32,6 @@ const App = () => {
       allButtons = allButtons.map(btn => {
         return new Promise((resolve) => resolve(getDependencies(btn, [])))
           .then((newDependencies) => {
-            console.log(newDependencies);
             newDependencies = newDependencies.filter(btn => dependencies.includes(btn) === false);
             dependencies = dependencies.concat(newDependencies);
           });
