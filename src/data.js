@@ -32,3 +32,4 @@ export const NODES = {
   1: FLAIR_NODES,
   2: T1_AND_FLAIR_NODES
 };
+
