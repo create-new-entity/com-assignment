@@ -29,16 +29,10 @@ const App = () => {
       let allButtons = NODES[selectedOption];
       let dependencies = [];
 
-      allButtons = allButtons.map(btn => {
-        return new Promise((resolve) => resolve(getDependencies(btn, [])))
-          .then((newDependencies) => {
-            newDependencies = newDependencies.filter(btn => dependencies.includes(btn) === false);
-            dependencies = dependencies.concat(newDependencies);
-          });
+      allButtons.forEach((dependency) => {
+        let newDependencies = getDependencies(dependency, dependencies);
+        dependencies = dependencies.concat(newDependencies.filter(dependency => dependencies.includes(dependency) === false));
       });
-      
-
-      await Promise.all(allButtons);
 
       setConfig(dependencies);
       setShowRunOption(false);
