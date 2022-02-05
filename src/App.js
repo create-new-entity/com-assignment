@@ -28,11 +28,17 @@ const App = () => {
     const runAllBtnHandler = async () => {
       let allButtons = NODES[selectedOption];
       let dependencies = [];
-
-      allButtons.forEach((dependency) => {
-        let newDependencies = getDependencies(dependency, dependencies);
-        dependencies = dependencies.concat(newDependencies.filter(dependency => dependencies.includes(dependency) === false));
+      
+      allButtons = allButtons.map(btn => {
+        return new Promise((resolve) => resolve(getDependencies(btn, [])))
+          .then((newDependencies) => {
+            newDependencies = newDependencies.filter(btn => dependencies.includes(btn) === false);
+            dependencies = dependencies.concat(newDependencies);
+          });
       });
+
+
+      await Promise.all(allButtons);
 
       setConfig(dependencies);
       setShowRunOption(false);
